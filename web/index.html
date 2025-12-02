@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ABARI">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>ABARI</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Splash Screen Styles -->
+  <style>
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease-out;
+    }
+    #splash-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #splash-logo {
+      width: 120px;
+      height: 120px;
+      background-color: rgba(33, 150, 243, 0.1);
+      border-radius: 24px;
+      padding: 16px;
+      box-sizing: border-box;
+      margin-bottom: 24px;
+    }
+    #splash-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    #splash-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 32px;
+      font-weight: bold;
+      color: #2196F3;
+      letter-spacing: 1.2px;
+      margin-bottom: 32px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(33, 150, 243, 0.2);
+      border-top-color: #2196F3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      #splash-screen {
+        background-color: #121212;
+      }
+      #splash-logo {
+        background-color: rgba(33, 150, 243, 0.2);
+      }
+      #splash-title {
+        color: #64B5F6;
+      }
+      .spinner {
+        border-color: rgba(100, 181, 246, 0.2);
+        border-top-color: #64B5F6;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Native Splash Screen -->
+  <div id="splash-screen">
+    <div id="splash-logo">
+      <img src="assets/images/logo.png" alt="Abari Logo">
+    </div>
+    <div id="splash-title">Abari</div>
+    <div class="spinner"></div>
+  </div>
+
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- Hide splash when Flutter is ready -->
+  <script>
+    window.addEventListener('flutter-first-frame', function() {
+      const splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => splash.remove(), 300);
+      }
+    });
+  </script>
+</body>
+</html>
