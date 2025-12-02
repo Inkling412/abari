@@ -44,14 +44,17 @@ class _ComprasScreenContent extends StatelessWidget {
             precioCompra: productoCreado.precioCompra,
             precioVenta: productoCreado.precioVenta,
             stock: productoCreado.stock,
-            categoria: productoCreado.categoria,
+            idCategoria: productoCreado.idCategoria,
           ),
         );
       },
     );
   }
 
-  Future<void> _duplicarProducto(CompraProvider provider, ProductoCompraItem item) async {
+  Future<void> _duplicarProducto(
+    CompraProvider provider,
+    ProductoCompraItem item,
+  ) async {
     // Cargar presentación y unidad de medida para generar nuevo código
     final presentacionFuture = Supabase.instance.client
         .from('presentacion')
@@ -61,10 +64,10 @@ class _ComprasScreenContent extends StatelessWidget {
 
     final unidadMedidaFuture = item.idUnidadMedida != null
         ? Supabase.instance.client
-            .from('unidad_medida')
-            .select('abreviatura')
-            .eq('id', item.idUnidadMedida!)
-            .maybeSingle()
+              .from('unidad_medida')
+              .select('abreviatura')
+              .eq('id', item.idUnidadMedida!)
+              .maybeSingle()
         : Future<Map<String, dynamic>?>.value(null);
 
     final results = await Future.wait([presentacionFuture, unidadMedidaFuture]);
@@ -93,7 +96,7 @@ class _ComprasScreenContent extends StatelessWidget {
         precioCompra: item.precioCompra,
         precioVenta: item.precioVenta,
         stock: item.stock,
-        categoria: item.categoria,
+        idCategoria: item.idCategoria,
       ),
     );
   }
@@ -107,7 +110,7 @@ class _ComprasScreenContent extends StatelessWidget {
   }) {
     final nombreLimpio = nombre.trim().replaceAll(' ', '');
     final abreviatura = abreviaturaUnidad.replaceAll(' ', '');
-    
+
     // Si la presentación tiene múltiples palabras, usar solo la última
     final palabras = descripcionPresentacion.trim().split(' ');
     final descripcionPres = palabras.length > 1
@@ -245,7 +248,9 @@ class _ComprasScreenContent extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: isLarge ? 15 : 14,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -512,7 +517,9 @@ class _ComprasScreenContent extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
@@ -520,7 +527,9 @@ class _ComprasScreenContent extends StatelessWidget {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 ),
@@ -538,10 +547,17 @@ class _ComprasScreenContent extends StatelessWidget {
                                 IconButton(
                                   icon: Icon(
                                     Icons.edit_outlined,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     size: 20,
                                   ),
-                                  onPressed: () => _editarProducto(context, provider, index, item),
+                                  onPressed: () => _editarProducto(
+                                    context,
+                                    provider,
+                                    index,
+                                    item,
+                                  ),
                                   visualDensity: VisualDensity.compact,
                                   tooltip: 'Editar',
                                 ),
@@ -551,7 +567,8 @@ class _ComprasScreenContent extends StatelessWidget {
                                     color: Colors.orange[600],
                                     size: 20,
                                   ),
-                                  onPressed: () => _duplicarProducto(provider, item),
+                                  onPressed: () =>
+                                      _duplicarProducto(provider, item),
                                   visualDensity: VisualDensity.compact,
                                   tooltip: 'Duplicar',
                                 ),
@@ -561,7 +578,8 @@ class _ComprasScreenContent extends StatelessWidget {
                                     color: Colors.red[400],
                                     size: 20,
                                   ),
-                                  onPressed: () => provider.eliminarProducto(index),
+                                  onPressed: () =>
+                                      provider.eliminarProducto(index),
                                   visualDensity: VisualDensity.compact,
                                   tooltip: 'Eliminar',
                                 ),
@@ -633,12 +651,18 @@ class _ComprasScreenContent extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                      Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      Theme.of(
+                        context,
+                      ).colorScheme.secondaryContainer.withValues(alpha: 0.3),
                     ],
                   ),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -694,11 +718,17 @@ class _ComprasScreenContent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.warning_amber, color: Colors.red[400], size: 20),
+                            Icon(
+                              Icons.warning_amber,
+                              color: Colors.red[400],
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -1072,15 +1102,18 @@ class _ComprasScreenContent extends StatelessWidget {
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.edit_outlined,
-                                                      color: Theme.of(context).colorScheme.primary,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary,
                                                       size: 20,
                                                     ),
-                                                    onPressed: () => _editarProducto(
-                                                      context,
-                                                      provider,
-                                                      index,
-                                                      item,
-                                                    ),
+                                                    onPressed: () =>
+                                                        _editarProducto(
+                                                          context,
+                                                          provider,
+                                                          index,
+                                                          item,
+                                                        ),
                                                     tooltip: 'Editar',
                                                   ),
                                                   IconButton(
@@ -1089,7 +1122,11 @@ class _ComprasScreenContent extends StatelessWidget {
                                                       color: Colors.orange[600],
                                                       size: 20,
                                                     ),
-                                                    onPressed: () => _duplicarProducto(provider, item),
+                                                    onPressed: () =>
+                                                        _duplicarProducto(
+                                                          provider,
+                                                          item,
+                                                        ),
                                                     tooltip: 'Duplicar',
                                                   ),
                                                   IconButton(
@@ -1382,28 +1419,30 @@ class _EditarProductoCompraSheet extends StatefulWidget {
   });
 
   @override
-  State<_EditarProductoCompraSheet> createState() => _EditarProductoCompraSheetState();
+  State<_EditarProductoCompraSheet> createState() =>
+      _EditarProductoCompraSheetState();
 }
 
-class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> {
+class _EditarProductoCompraSheetState
+    extends State<_EditarProductoCompraSheet> {
   late TextEditingController _nombreController;
   late TextEditingController _codigoController;
   late TextEditingController _cantidadController;
   late TextEditingController _precioCompraController;
   late TextEditingController _precioVentaController;
   late TextEditingController _stockController;
-  
+
   // Variables de estado para opciones avanzadas
   late int _idPresentacion;
   late int? _idUnidadMedida;
-  
+
   // Para generación de código
   String _descripcionPresentacion = '';
   String _abreviaturaUnidad = '';
-  
+
   // Categorías
-  List<String> _categorias = [];
-  String? _categoriaSeleccionada;
+  List<Map<String, dynamic>> _categorias = [];
+  int? _categoriaSeleccionada;
   bool _cargandoCategorias = true;
 
   @override
@@ -1423,26 +1462,23 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
     _stockController = TextEditingController(
       text: widget.item.stock.toString(),
     );
-    
+
     // Inicializar opciones avanzadas
     _idPresentacion = widget.item.idPresentacion;
     _idUnidadMedida = widget.item.idUnidadMedida;
-    _categoriaSeleccionada = widget.item.categoria;
-    
+    _categoriaSeleccionada = widget.item.idCategoria;
+
     // Listeners para regenerar código
     _nombreController.addListener(_actualizarCodigo);
     _cantidadController.addListener(_actualizarCodigo);
-    
+
     _cargarDatosIniciales();
   }
-  
+
   Future<void> _cargarDatosIniciales() async {
-    await Future.wait([
-      _cargarPresentacionYUnidad(),
-      _cargarCategorias(),
-    ]);
+    await Future.wait([_cargarPresentacionYUnidad(), _cargarCategorias()]);
   }
-  
+
   Future<void> _cargarPresentacionYUnidad() async {
     try {
       final presentacion = await Supabase.instance.client
@@ -1450,7 +1486,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
           .select('descripcion')
           .eq('id_presentacion', _idPresentacion)
           .maybeSingle();
-      
+
       Map<String, dynamic>? unidad;
       if (_idUnidadMedida != null) {
         unidad = await Supabase.instance.client
@@ -1459,10 +1495,11 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
             .eq('id', _idUnidadMedida!)
             .maybeSingle();
       }
-      
+
       if (mounted) {
         setState(() {
-          _descripcionPresentacion = presentacion?['descripcion'] as String? ?? '';
+          _descripcionPresentacion =
+              presentacion?['descripcion'] as String? ?? '';
           _abreviaturaUnidad = unidad?['abreviatura'] as String? ?? '';
         });
         _actualizarCodigo();
@@ -1471,27 +1508,27 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
       // Ignorar errores
     }
   }
-  
+
   void _actualizarCodigo() {
     if (_descripcionPresentacion.isEmpty) return;
-    
+
     final nombre = _nombreController.text.trim();
     final cantidad = double.tryParse(_cantidadController.text) ?? 0;
-    
+
     if (nombre.isEmpty) return;
-    
+
     final nuevoCodigo = _generarCodigoLocal(
       nombre: nombre,
       cantidad: cantidad,
       abreviaturaUnidad: _abreviaturaUnidad,
       descripcionPresentacion: _descripcionPresentacion,
     );
-    
+
     if (_codigoController.text != nuevoCodigo) {
       _codigoController.text = nuevoCodigo;
     }
   }
-  
+
   String _generarCodigoLocal({
     required String nombre,
     required double cantidad,
@@ -1500,7 +1537,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
   }) {
     final nombreLimpio = nombre.replaceAll(' ', '');
     final abreviatura = abreviaturaUnidad.replaceAll(' ', '');
-    
+
     final palabras = descripcionPresentacion.trim().split(' ');
     final descripcionPres = palabras.length > 1
         ? palabras.last
@@ -1522,21 +1559,20 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
   Future<void> _cargarCategorias() async {
     try {
       final response = await Supabase.instance.client
-          .from('producto')
-          .select('categoria')
-          .not('categoria', 'is', null);
+          .from('categoria')
+          .select('id, nombre')
+          .order('nombre', ascending: true);
 
-      final Set<String> categoriasSet = {};
-      for (final item in (response as List)) {
-        final cat = item['categoria']?.toString();
-        if (cat != null && cat.isNotEmpty) {
-          categoriasSet.add(cat);
-        }
-      }
-      
       if (mounted) {
         setState(() {
-          _categorias = categoriasSet.toList()..sort();
+          _categorias = (response as List)
+              .map(
+                (item) => {
+                  'id': item['id'],
+                  'nombre': item['nombre']?.toString() ?? 'Sin categoría',
+                },
+              )
+              .toList();
           _cargandoCategorias = false;
         });
       }
@@ -1567,12 +1603,12 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
     final precioCompra = double.tryParse(_precioCompraController.text) ?? 0;
     final precioVenta = double.tryParse(_precioVentaController.text) ?? 0;
     final stock = int.tryParse(_stockController.text) ?? 1;
-    final categoria = _categoriaSeleccionada;
+    final idCategoria = _categoriaSeleccionada;
 
     if (nombre.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre es requerido')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('El nombre es requerido')));
       return;
     }
 
@@ -1587,7 +1623,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
       precioCompra: precioCompra,
       precioVenta: precioVenta,
       stock: stock,
-      categoria: categoria,
+      idCategoria: idCategoria,
     );
 
     widget.onProductoEditado(productoEditado);
@@ -1604,7 +1640,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
         idUnidadMedidaActual: _idUnidadMedida,
       ),
     );
-    
+
     if (resultado != null && mounted) {
       // Actualizar las variables de estado locales
       setState(() {
@@ -1619,7 +1655,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -1646,7 +1682,7 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Título
             Row(
               children: [
@@ -1687,7 +1723,8 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.qr_code),
                       filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      fillColor: colorScheme.surfaceContainerHighest
+                          .withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -1729,7 +1766,10 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
                     decoration: InputDecoration(
                       labelText: 'Precio venta',
                       border: const OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.attach_money, color: Colors.green[600]),
+                      prefixIcon: Icon(
+                        Icons.attach_money,
+                        color: Colors.green[600],
+                      ),
                     ),
                   ),
                 ),
@@ -1754,12 +1794,14 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
                 const SizedBox(width: 12),
                 Expanded(
                   child: _cargandoCategorias
-                      ? const Center(child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ))
-                      : DropdownButtonFormField<String>(
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : DropdownButtonFormField<int>(
                           value: _categoriaSeleccionada,
                           isExpanded: true,
                           decoration: const InputDecoration(
@@ -1768,14 +1810,19 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
                             prefixIcon: Icon(Icons.category_outlined),
                           ),
                           items: [
-                            const DropdownMenuItem<String>(
+                            const DropdownMenuItem<int>(
                               value: null,
                               child: Text('Sin categoría'),
                             ),
-                            ..._categorias.map((cat) => DropdownMenuItem<String>(
-                              value: cat,
-                              child: Text(cat, overflow: TextOverflow.ellipsis),
-                            )),
+                            ..._categorias.map(
+                              (cat) => DropdownMenuItem<int>(
+                                value: cat['id'] as int?,
+                                child: Text(
+                                  cat['nombre']?.toString() ?? '',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
                           ],
                           onChanged: (value) {
                             setState(() => _categoriaSeleccionada = value);
@@ -1789,17 +1836,10 @@ class _EditarProductoCompraSheetState extends State<_EditarProductoCompraSheet> 
             // Botón de opciones avanzadas
             TextButton.icon(
               onPressed: _abrirOpcionesAvanzadas,
-              icon: Icon(
-                Icons.tune,
-                size: 18,
-                color: colorScheme.secondary,
-              ),
+              icon: Icon(Icons.tune, size: 18, color: colorScheme.secondary),
               label: Text(
                 'Opciones avanzadas (presentación, unidad de medida...)',
-                style: TextStyle(
-                  color: colorScheme.secondary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: colorScheme.secondary, fontSize: 13),
               ),
             ),
             const SizedBox(height: 16),
@@ -1851,14 +1891,15 @@ class _OpcionesAvanzadasSheet extends StatefulWidget {
   });
 
   @override
-  State<_OpcionesAvanzadasSheet> createState() => _OpcionesAvanzadasSheetState();
+  State<_OpcionesAvanzadasSheet> createState() =>
+      _OpcionesAvanzadasSheetState();
 }
 
 class _OpcionesAvanzadasSheetState extends State<_OpcionesAvanzadasSheet> {
   List<dynamic> presentaciones = [];
   List<dynamic> unidadesMedida = [];
   bool cargando = true;
-  
+
   int? presentacionSeleccionada;
   int? unidadMedidaSeleccionada;
 
@@ -1882,7 +1923,7 @@ class _OpcionesAvanzadasSheetState extends State<_OpcionesAvanzadasSheet> {
             .select('id,nombre,abreviatura')
             .order('nombre', ascending: true),
       ]);
-      
+
       if (mounted) {
         setState(() {
           presentaciones = futures[0] as List;
@@ -1907,7 +1948,7 @@ class _OpcionesAvanzadasSheetState extends State<_OpcionesAvanzadasSheet> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -1934,7 +1975,7 @@ class _OpcionesAvanzadasSheetState extends State<_OpcionesAvanzadasSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Título
             Row(
               children: [
@@ -2034,7 +2075,9 @@ class _OpcionesAvanzadasSheetState extends State<_OpcionesAvanzadasSheet> {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton.icon(
-                      onPressed: presentacionSeleccionada != null ? _guardar : null,
+                      onPressed: presentacionSeleccionada != null
+                          ? _guardar
+                          : null,
                       icon: const Icon(Icons.check),
                       label: const Text('Aplicar'),
                       style: ElevatedButton.styleFrom(

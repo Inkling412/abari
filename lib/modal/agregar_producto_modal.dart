@@ -12,7 +12,7 @@ class ProductoCreado {
   final double precioCompra;
   final double precioVenta;
   final int stock;
-  final String? categoria;
+  final int? idCategoria;
 
   ProductoCreado({
     required this.nombre,
@@ -23,7 +23,7 @@ class ProductoCreado {
     required this.precioCompra,
     required this.precioVenta,
     required this.stock,
-    this.categoria,
+    this.idCategoria,
   });
 }
 
@@ -37,7 +37,7 @@ class ProductoInicial {
   final double? precioCompra;
   final double? precioVenta;
   final int? stock;
-  final String? categoria;
+  final int? idCategoria;
 
   const ProductoInicial({
     this.nombre,
@@ -48,7 +48,7 @@ class ProductoInicial {
     this.precioCompra,
     this.precioVenta,
     this.stock,
-    this.categoria,
+    this.idCategoria,
   });
 }
 
@@ -58,51 +58,60 @@ Future<void> mostrarAgregarProducto(
   void Function(ProductoCreado)? onProductoCreado,
   ProductoInicial? datosIniciales,
 }) async {
-  // Cargar datos iniciales
-  final presentaciones = await Supabase.instance.client
-      .from('presentacion')
-      .select('id_presentacion,descripcion')
-      .order('descripcion', ascending: true);
+  try {
+    // Cargar datos iniciales
+    final presentaciones = await Supabase.instance.client
+        .from('presentacion')
+        .select('id_presentacion,descripcion')
+        .order('descripcion', ascending: true);
 
-  final unidadesMedida = await Supabase.instance.client
-      .from('unidad_medida')
-      .select('id,nombre,abreviatura')
-      .order('nombre', ascending: true);
+    final unidadesMedida = await Supabase.instance.client
+        .from('unidad_medida')
+        .select('id,nombre,abreviatura')
+        .order('nombre', ascending: true);
 
-  final categoriasResponse = await Supabase.instance.client
-      .from('producto')
-      .select('categoria')
-      .not('categoria', 'is', null);
+    final categoriasResponse = await Supabase.instance.client
+        .from('categoria')
+        .select('id, nombre')
+        .order('nombre', ascending: true);
 
-  final Set<String> categoriasSet = {};
-  for (final item in (categoriasResponse as List)) {
-    final cat = item['categoria']?.toString();
-    if (cat != null && cat.isNotEmpty) {
-      categoriasSet.add(cat);
+    final List<Map<String, dynamic>> categoriasList = [];
+    for (final item in (categoriasResponse as List)) {
+      categoriasList.add({
+        'id': item['id'],
+        'nombre': item['nombre']?.toString() ?? 'Sin categoría',
+      });
     }
-  }
 
-  if (!context.mounted) return;
+    if (!context.mounted) return;
 
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (context) => _AgregarProductoPage(
-        listaPresentaciones: presentaciones as List,
-        listaUnidadesMedida: unidadesMedida as List,
-        listaCategorias: categoriasSet.toList()..sort(),
-        onSuccess: onSuccess,
-        onProductoCreado: onProductoCreado,
-        datosIniciales: datosIniciales,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => _AgregarProductoPage(
+          listaPresentaciones: presentaciones as List,
+          listaUnidadesMedida: unidadesMedida as List,
+          listaCategorias: categoriasList,
+          onSuccess: onSuccess,
+          onProductoCreado: onProductoCreado,
+          datosIniciales: datosIniciales,
+        ),
       ),
-    ),
-  );
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    Fluttertoast.showToast(
+      msg: 'Error al cargar datos: $e',
+      backgroundColor: Colors.red,
+      toastLength: Toast.LENGTH_LONG,
+    );
+  }
 }
 
 class _AgregarProductoPage extends StatefulWidget {
   final List<dynamic> listaPresentaciones;
   final List<dynamic> listaUnidadesMedida;
-  final List<String> listaCategorias;
+  final List<Map<String, dynamic>> listaCategorias;
   final VoidCallback onSuccess;
   final void Function(ProductoCreado)? onProductoCreado;
   final ProductoInicial? datosIniciales;
@@ -138,7 +147,7 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
 
   int? presentacionSeleccionada;
   int? unidadMedidaSeleccionada;
-  String? categoriaSeleccionada;
+  int? categoriaSeleccionada;
 
   late List<dynamic> listaPresentaciones;
   late List<dynamic> listaUnidadesMedida;
@@ -155,7 +164,7 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
     super.initState();
     listaPresentaciones = List.from(widget.listaPresentaciones);
     listaUnidadesMedida = List.from(widget.listaUnidadesMedida);
-    
+
     // Inicializar con datos existentes si se proporcionan
     final datos = widget.datosIniciales;
     if (datos != null) {
@@ -181,8 +190,8 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
       if (datos.idUnidadMedida != null) {
         unidadMedidaSeleccionada = datos.idUnidadMedida;
       }
-      if (datos.categoria != null) {
-        categoriaSeleccionada = datos.categoria;
+      if (datos.idCategoria != null) {
+        categoriaSeleccionada = datos.idCategoria;
       }
     }
   }
@@ -541,8 +550,8 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
       if (usarFechaPersonalizada && fechaAgregadoController.text.isNotEmpty) {
         datosBase['fecha_agregado'] = fechaAgregadoController.text;
       }
-      if (categoriaSeleccionada != null && categoriaSeleccionada!.isNotEmpty) {
-        datosBase['categoria'] = categoriaSeleccionada;
+      if (categoriaSeleccionada != null) {
+        datosBase['id_categoria'] = categoriaSeleccionada;
       }
 
       // Para productos a granel: solo 1 registro, la cantidad ES el stock
@@ -565,7 +574,7 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
             precioCompra: double.tryParse(precioCompraController.text) ?? 0,
             precioVenta: double.tryParse(precioVentaController.text) ?? 0,
             stock: esGranel ? 1 : stock,
-            categoria: categoriaSeleccionada,
+            idCategoria: categoriaSeleccionada,
           );
           widget.onProductoCreado!(productoCreado);
         }
@@ -817,35 +826,30 @@ class _AgregarProductoPageState extends State<_AgregarProductoPage> {
             ),
           ),
           const SizedBox(height: 12),
-          Autocomplete<String>(
-            optionsBuilder: (textEditingValue) {
-              if (textEditingValue.text.isEmpty) return widget.listaCategorias;
-              return widget.listaCategorias.where(
-                (cat) => cat.toLowerCase().contains(
-                  textEditingValue.text.toLowerCase(),
-                ),
-              );
-            },
-            onSelected: (selection) =>
-                setState(() => categoriaSeleccionada = selection),
-            fieldViewBuilder:
-                (context, controller, focusNode, onFieldSubmitted) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Ej: Granos, Bebidas, Lácteos',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      prefixIcon: const Icon(Icons.category_outlined),
-                      filled: true,
-                    ),
-                    onChanged: (value) => setState(() {
-                      categoriaSeleccionada = value.isNotEmpty ? value : null;
-                    }),
-                  );
-                },
+          DropdownButtonFormField<int>(
+            value: categoriaSeleccionada,
+            isExpanded: true,
+            decoration: InputDecoration(
+              hintText: 'Seleccionar categoría',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              prefixIcon: const Icon(Icons.category_outlined),
+              filled: true,
+            ),
+            items: [
+              const DropdownMenuItem<int>(
+                value: null,
+                child: Text('Sin categoría'),
+              ),
+              ...widget.listaCategorias.map<DropdownMenuItem<int>>((cat) {
+                return DropdownMenuItem<int>(
+                  value: cat['id'] as int?,
+                  child: Text(cat['nombre']?.toString() ?? ''),
+                );
+              }),
+            ],
+            onChanged: (value) => setState(() => categoriaSeleccionada = value),
           ),
         ],
       ),

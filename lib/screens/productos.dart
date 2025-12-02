@@ -364,10 +364,14 @@ class _InventarioPageState extends State<ProductosScreen>
   Future<void> _cargarCategorias() async {
     final client = Supabase.instance.client;
     try {
-      // Cargar presentaciones y unidades
+      // Cargar presentaciones, unidades y categorías
       final results = await Future.wait([
         client.from('presentacion').select('id_presentacion, descripcion'),
         client.from('unidad_medida').select('id, abreviatura'),
+        client
+            .from('categoria')
+            .select('id, nombre')
+            .order('nombre', ascending: true),
       ]);
 
       // Procesar presentaciones
@@ -390,11 +394,26 @@ class _InventarioPageState extends State<ProductosScreen>
         }
       }
 
+      // Procesar categorías
+      final List<String> catList = [];
+      final Map<String, int> catMap = {};
+      for (final item in (results[2] as List)) {
+        final id = item['id'] as int?;
+        final nombre = item['nombre'] as String?;
+        if (id != null && nombre != null && nombre.isNotEmpty) {
+          catList.add(nombre);
+          catMap[nombre] = id;
+        }
+      }
+
       if (mounted) {
         setState(() {
           presentaciones = presMap;
           unidadesAbrev = unidMap;
+          categorias = catList;
+          categoriasMap = catMap;
         });
+        _initTabController();
       }
     } catch (e) {
       debugPrint('Error al cargar catálogos: $e');
@@ -454,24 +473,6 @@ class _InventarioPageState extends State<ProductosScreen>
           }
           cargando = false;
         });
-
-        // Extraer categorías únicas de los productos cargados (solo en primera carga)
-        if (!append && categorias.isEmpty) {
-          final Map<String, int> catMap = {};
-          for (final p in productos) {
-            if (p.categoriaNombre != null &&
-                p.categoriaNombre!.isNotEmpty &&
-                p.categoriaId != null) {
-              catMap[p.categoriaNombre!] = p.categoriaId!;
-            }
-          }
-          final catList = catMap.keys.toList()..sort();
-          setState(() {
-            categorias = catList;
-            categoriasMap = catMap;
-          });
-          _initTabController();
-        }
       }
     } catch (e) {
       debugPrint('Error al cargar datos: $e');

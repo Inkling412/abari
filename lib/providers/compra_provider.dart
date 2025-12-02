@@ -25,7 +25,8 @@ class ProveedorCompra {
 
 /// Item de producto dentro de una compra
 class ProductoCompraItem {
-  final int? idProductoBase; // Puede ser null si es un producto totalmente nuevo
+  final int?
+  idProductoBase; // Puede ser null si es un producto totalmente nuevo
   final int idPresentacion;
   final int? idUnidadMedida;
   final String nombre;
@@ -35,7 +36,7 @@ class ProductoCompraItem {
   final double precioCompra;
   final double precioVenta;
   final int stock; // cuántas unidades se compran
-  final String? categoria;
+  final int? idCategoria;
 
   const ProductoCompraItem({
     this.idProductoBase,
@@ -48,7 +49,7 @@ class ProductoCompraItem {
     required this.precioCompra,
     required this.precioVenta,
     required this.stock,
-    this.categoria,
+    this.idCategoria,
   });
 
   ProductoCompraItem copyWith({
@@ -62,7 +63,7 @@ class ProductoCompraItem {
     double? precioCompra,
     double? precioVenta,
     int? stock,
-    String? categoria,
+    int? idCategoria,
   }) {
     return ProductoCompraItem(
       idProductoBase: idProductoBase ?? this.idProductoBase,
@@ -75,7 +76,7 @@ class ProductoCompraItem {
       precioCompra: precioCompra ?? this.precioCompra,
       precioVenta: precioVenta ?? this.precioVenta,
       stock: stock ?? this.stock,
-      categoria: categoria ?? this.categoria,
+      idCategoria: idCategoria ?? this.idCategoria,
     );
   }
 }
@@ -127,10 +128,7 @@ class CompraProvider extends ChangeNotifier {
 
   /// Total invertido (suma de costo)
   double get totalCosto {
-    return _productos.fold(
-      0.0,
-      (sum, p) => sum + (p.precioCompra * p.stock),
-    );
+    return _productos.fold(0.0, (sum, p) => sum + (p.precioCompra * p.stock));
   }
 
   /// Total de venta esperable (usando precioVenta)
@@ -338,8 +336,8 @@ class CompraProvider extends ChangeNotifier {
         if (item.stock <= 0) continue;
 
         // Construimos la lista de filas a insertar en producto
-        // Estructura: estado, id_producto, nombre_producto, id_presentacion, 
-        // fecha_vencimiento, codigo, cantidad, precio_venta, precio_compra, 
+        // Estructura: estado, id_producto, nombre_producto, id_presentacion,
+        // fecha_vencimiento, codigo, cantidad, precio_venta, precio_compra,
         // fecha_agregado, id_unidad_medida, categoria
         final List<Map<String, dynamic>> filasProducto = List.generate(
           item.stock,
@@ -353,18 +351,19 @@ class CompraProvider extends ChangeNotifier {
               'precio_venta': item.precioVenta,
               'precio_compra': item.precioCompra,
             };
-            
+
             // Campos opcionales
-            if (item.fechaVencimiento != null && item.fechaVencimiento!.isNotEmpty) {
+            if (item.fechaVencimiento != null &&
+                item.fechaVencimiento!.isNotEmpty) {
               fila['fecha_vencimiento'] = item.fechaVencimiento;
             }
             if (item.idUnidadMedida != null) {
               fila['id_unidad_medida'] = item.idUnidadMedida;
             }
-            if (item.categoria != null && item.categoria!.isNotEmpty) {
-              fila['categoria'] = item.categoria;
+            if (item.idCategoria != null) {
+              fila['id_categoria'] = item.idCategoria;
             }
-            
+
             return fila;
           },
         );
