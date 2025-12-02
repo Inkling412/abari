@@ -643,6 +643,14 @@ class _InventarioPageState extends State<ProductosScreen>
     BuildContext context,
     ProductoGrupo producto,
   ) async {
+    final esGranel = producto.esGranel;
+
+    // Para productos unitarios, cargar la lista de productos individuales
+    List<Map<String, dynamic>> productosIndividuales = [];
+    Set<int> productosSeleccionados = {};
+    bool editarTodos = true;
+    bool cargandoProductos = !esGranel;
+
     final nombreController = TextEditingController(
       text: producto.nombreProducto,
     );
@@ -652,6 +660,10 @@ class _InventarioPageState extends State<ProductosScreen>
     final precioCompraController = TextEditingController(
       text: producto.precioCompra?.toStringAsFixed(2) ?? '',
     );
+    // Para productos a granel: campo de cantidad/stock
+    final cantidadController = TextEditingController(
+      text: esGranel ? producto.stock.toStringAsFixed(2) : '',
+    );
     String? categoriaSeleccionada = producto.categoriaNombre;
     int? presentacionSeleccionada = producto.idPresentacion;
 
@@ -660,18 +672,332 @@ class _InventarioPageState extends State<ProductosScreen>
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            // Cargar productos individuales si es unitario
+            if (!esGranel && cargandoProductos) {
+              Supabase.instance.client
+                  .from('producto')
+                  .select('id_producto, fecha_vencimiento, cantidad')
+                  .eq('codigo', producto.codigo)
+                  .eq('estado', 'Disponible')
+                  .order('fecha_vencimiento', ascending: true)
+                  .then((data) {
+                    if (context.mounted) {
+                      setDialogState(() {
+                        productosIndividuales = List<Map<String, dynamic>>.from(
+                          data,
+                        );
+                        // Por defecto, seleccionar todos
+                        productosSeleccionados = productosIndividuales
+                            .map((p) => p['id_producto'] as int)
+                            .toSet();
+                        cargandoProductos = false;
+                      });
+                    }
+                  });
+            }
+
             return AlertDialog(
-              title: const Text('Editar producto'),
+              title: Row(
+                children: [
+                  Icon(
+                    esGranel ? Icons.scale : Icons.inventory_2,
+                    color: esGranel ? Colors.orange : Colors.blue,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Editar producto'),
+                        Text(
+                          esGranel ? 'Producto a granel' : 'Producto unitario',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: esGranel ? Colors.orange : Colors.blue,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Código: ${producto.codigo}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    // Info del código y stock actual
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.qr_code, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Código: ${producto.codigo}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                esGranel ? Icons.scale : Icons.inventory,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                esGranel
+                                    ? 'Stock actual: ${producto.stockTexto}'
+                                    : 'Unidades disponibles: ${producto.stock.toInt()}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Para productos unitarios: selector de productos
+                    if (!esGranel) ...[
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.3),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.checklist,
+                                  size: 18,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Seleccionar productos a editar',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Toggle todos/selectos
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        editarTodos = true;
+                                        productosSeleccionados =
+                                            productosIndividuales
+                                                .map(
+                                                  (p) =>
+                                                      p['id_producto'] as int,
+                                                )
+                                                .toSet();
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: editarTodos
+                                            ? Colors.blue.withOpacity(0.2)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: editarTodos
+                                              ? Colors.blue
+                                              : Colors.grey.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.select_all,
+                                            size: 16,
+                                            color: editarTodos
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Todos',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: editarTodos
+                                                  ? Colors.blue
+                                                  : Colors.grey,
+                                              fontWeight: editarTodos
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        editarTodos = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: !editarTodos
+                                            ? Colors.blue.withOpacity(0.2)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: !editarTodos
+                                              ? Colors.blue
+                                              : Colors.grey.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.check_box_outlined,
+                                            size: 16,
+                                            color: !editarTodos
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Selectos',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: !editarTodos
+                                                  ? Colors.blue
+                                                  : Colors.grey,
+                                              fontWeight: !editarTodos
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Lista de productos individuales (solo si selectos)
+                            if (!editarTodos) ...[
+                              const SizedBox(height: 8),
+                              if (cargandoProductos)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 150,
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: productosIndividuales.length,
+                                    itemBuilder: (context, index) {
+                                      final prod = productosIndividuales[index];
+                                      final id = prod['id_producto'] as int;
+                                      final fechaVenc =
+                                          prod['fecha_vencimiento'] as String?;
+                                      final isSelected = productosSeleccionados
+                                          .contains(id);
+
+                                      String fechaTexto = 'Sin vencimiento';
+                                      if (fechaVenc != null) {
+                                        final fecha = DateTime.tryParse(
+                                          fechaVenc,
+                                        );
+                                        if (fecha != null) {
+                                          fechaTexto =
+                                              '${fecha.day}/${fecha.month}/${fecha.year}';
+                                        }
+                                      }
+
+                                      return CheckboxListTile(
+                                        value: isSelected,
+                                        onChanged: (value) {
+                                          setDialogState(() {
+                                            if (value == true) {
+                                              productosSeleccionados.add(id);
+                                            } else {
+                                              productosSeleccionados.remove(id);
+                                            }
+                                          });
+                                        },
+                                        title: Text(
+                                          'Producto #${index + 1}',
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                        subtitle: Text(
+                                          'Vence: $fechaTexto',
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        controlAffinity:
+                                            ListTileControlAffinity.leading,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              Text(
+                                '${productosSeleccionados.length} de ${productosIndividuales.length} seleccionados',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Nombre
                     TextField(
                       controller: nombreController,
@@ -682,6 +1008,25 @@ class _InventarioPageState extends State<ProductosScreen>
                       ),
                     ),
                     const SizedBox(height: 12),
+
+                    // Para productos a granel: campo de cantidad
+                    if (esGranel) ...[
+                      TextField(
+                        controller: cantidadController,
+                        decoration: InputDecoration(
+                          labelText:
+                              'Stock (${producto.unidadMedidaAbreviatura ?? 'unidades'})',
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          helperText: 'Cantidad disponible a granel',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     // Precios en fila
                     Row(
                       children: [
@@ -752,12 +1097,38 @@ class _InventarioPageState extends State<ProductosScreen>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Los cambios se aplicarán a todos los productos con este código.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.orange[700],
-                        fontStyle: FontStyle.italic,
+                    // Mensaje informativo
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.orange[700],
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              esGranel
+                                  ? 'Los cambios se aplicarán al producto a granel.'
+                                  : editarTodos
+                                  ? 'Los cambios se aplicarán a todos los productos (${productosIndividuales.length}).'
+                                  : 'Los cambios se aplicarán a ${productosSeleccionados.length} producto(s) seleccionado(s).',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.orange[700],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -769,16 +1140,29 @@ class _InventarioPageState extends State<ProductosScreen>
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
-                  onPressed: () => Navigator.pop(context, {
-                    'confirmar': true,
-                    'nombre': nombreController.text.trim(),
-                    'precioVenta': double.tryParse(precioVentaController.text),
-                    'precioCompra': double.tryParse(
-                      precioCompraController.text,
-                    ),
-                    'categoriaId': categoriaSeleccionada,
-                    'presentacionId': presentacionSeleccionada,
-                  }),
+                  onPressed:
+                      (!esGranel &&
+                          !editarTodos &&
+                          productosSeleccionados.isEmpty)
+                      ? null
+                      : () => Navigator.pop(context, {
+                          'confirmar': true,
+                          'nombre': nombreController.text.trim(),
+                          'precioVenta': double.tryParse(
+                            precioVentaController.text,
+                          ),
+                          'precioCompra': double.tryParse(
+                            precioCompraController.text,
+                          ),
+                          'categoriaId': categoriaSeleccionada,
+                          'presentacionId': presentacionSeleccionada,
+                          'esGranel': esGranel,
+                          'cantidad': esGranel
+                              ? double.tryParse(cantidadController.text)
+                              : null,
+                          'editarTodos': editarTodos,
+                          'productosIds': productosSeleccionados.toList(),
+                        }),
                   child: const Text('Guardar'),
                 ),
               ],
@@ -808,6 +1192,10 @@ class _InventarioPageState extends State<ProductosScreen>
         if (resultado['presentacionId'] != null) {
           updates['id_presentacion'] = resultado['presentacionId'];
         }
+        // Para productos a granel: actualizar cantidad
+        if (resultado['esGranel'] == true && resultado['cantidad'] != null) {
+          updates['cantidad'] = resultado['cantidad'];
+        }
 
         if (updates.isEmpty) {
           if (context.mounted) {
@@ -821,17 +1209,40 @@ class _InventarioPageState extends State<ProductosScreen>
           return;
         }
 
-        await Supabase.instance.client
-            .from('producto')
-            .update(updates)
-            .eq('codigo', producto.codigo);
+        // Aplicar cambios según el tipo de producto y selección
+        if (resultado['esGranel'] == true || resultado['editarTodos'] == true) {
+          // Editar todos los productos con este código
+          await Supabase.instance.client
+              .from('producto')
+              .update(updates)
+              .eq('codigo', producto.codigo)
+              .eq('estado', 'Disponible');
+        } else {
+          // Editar solo los productos seleccionados
+          final productosIds = resultado['productosIds'] as List<int>;
+          if (productosIds.isNotEmpty) {
+            await Supabase.instance.client
+                .from('producto')
+                .update(updates)
+                .inFilter('id_producto', productosIds);
+          }
+        }
 
         await cargarDatos();
 
         if (context.mounted) {
+          final cantidad = resultado['esGranel'] == true
+              ? 1
+              : (resultado['editarTodos'] == true
+                    ? productosIndividuales.length
+                    : (resultado['productosIds'] as List).length);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Producto actualizado correctamente'),
+            SnackBar(
+              content: Text(
+                cantidad == 1
+                    ? 'Producto actualizado correctamente'
+                    : '$cantidad productos actualizados correctamente',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -1310,22 +1721,36 @@ class _InventarioPageState extends State<ProductosScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              // Badge de Stock (estilo similar a Precio)
+              // Badge de Stock con indicador de tipo (granel/unitario)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: stock > 5
-                      ? Colors.blue[600]
+                      ? (esGranel ? Colors.orange[600] : Colors.blue[600])
                       : stock > 0
-                      ? Colors.orange[600]
+                      ? Colors.orange[700]
                       : Colors.red[600],
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      'Stock',
-                      style: TextStyle(fontSize: 9, color: Colors.white70),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          esGranel ? Icons.scale : Icons.inventory_2,
+                          size: 10,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          esGranel ? 'Granel' : 'Stock',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       stockTexto,

@@ -323,16 +323,57 @@ class _PrediccionChartState extends State<PrediccionChart> {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
-        // Leyenda
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildLegendItem('Predicción positiva', Colors.green, isDark),
-            const SizedBox(width: 16),
-            _buildLegendItem('Predicción negativa', Colors.red, isDark),
-          ],
+        // Leyenda mejorada
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.grey.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: isDark ? 0.2 : 0.15),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Leyenda del gráfico',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[isDark ? 400 : 600],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildLegendItem(
+                    'Ganancia esperada',
+                    'Días con ventas proyectadas',
+                    Icons.trending_up,
+                    Colors.green,
+                    isDark,
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                  /*_buildLegendItem(
+                    'Pérdida esperada',
+                    'Días con déficit proyectado',
+                    Icons.trending_down,
+                    Colors.red,
+                    isDark,
+                  )*/
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -382,21 +423,55 @@ class _PrediccionChartState extends State<PrediccionChart> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, bool isDark) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(3),
+  Widget _buildLegendItem(
+    String label,
+    String descripcion,
+    IconData icono,
+    Color color,
+    bool isDark,
+  ) {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.25 : 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icono,
+              color: isDark ? _getLighterColor(color) : color,
+              size: 18,
+            ),
           ),
-        ),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-      ],
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.grey[800],
+                  ),
+                ),
+                Text(
+                  descripcion,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.grey[isDark ? 500 : 600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

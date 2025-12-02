@@ -376,7 +376,7 @@ class InvoiceTable extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -385,9 +385,9 @@ class InvoiceTable extends StatelessWidget {
             size: 64,
             color: colorScheme.outline.withOpacity(0.5),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(
-            'No hay productos en la factura',
+            'No hay productos en el carrito',
             style: textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurfaceVariant,
@@ -395,7 +395,7 @@ class InvoiceTable extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Agrega productos usando el botón de abajo',
+            'Agrega productos',
             style: textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withOpacity(0.7),
             ),

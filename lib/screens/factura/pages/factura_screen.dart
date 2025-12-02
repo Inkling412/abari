@@ -316,16 +316,18 @@ class _FacturaScreenContentState extends State<_FacturaScreenContent> {
                 _buildEmpleadoSelector(context),
                 const SizedBox(height: 24),
                 const SizedBox(height: 8),
-                Text(
-                  'Agrega los productos que deseas vender',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                Center(
+                  child: Text(
+                    'Carrito de compras',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ),
                 // Tabla de productos
-                _buildProductosTable(context),
+                Center(child: _buildProductosTable(context)),
                 const SizedBox(height: 24),
 
                 // Botón agregar producto
