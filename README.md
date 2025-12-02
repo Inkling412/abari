@@ -2,7 +2,7 @@
 
 # 🏪 ABARI
 
-### Sistema de Gestión Comercial Inteligente
+### Aplicacion inteligente de gestion de inventario y prediccion de ventas
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.9+-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
@@ -201,13 +201,6 @@ El sistema incluye un módulo de **predicción de ventas** que utiliza Machine L
 - [ ] Dashboard de analytics avanzado
 - [ ] API REST para integraciones
 
----
-
-## 🤝 Contribución
-
-Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría realizar.
-
----
 
 ## 📄 Licencia
 
@@ -217,6 +210,6 @@ Este proyecto es software propietario. Todos los derechos reservados.
 
 <div align="center">
 
-**Desarrollado con ❤️ usando Flutter**
+**Desarrollado por Enrique Urbina y Miguel Hernandez usando Flutter**
 
 </div>
