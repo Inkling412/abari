@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:abari/widgets/prediccion_chart.dart';
+import 'package:abari/widgets/prediccion_demanda_chart.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -315,6 +316,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            // Sección de Predicción de Demanda de Productos
+            const PrediccionDemandaChart(),
 
             const SizedBox(height: 24),
 
